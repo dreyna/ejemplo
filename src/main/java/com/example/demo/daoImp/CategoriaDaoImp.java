@@ -1,0 +1,62 @@
+package com.example.demo.daoImp;
+
+import java.sql.Types;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.ColumnMapRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.SqlOutParameter;
+import org.springframework.jdbc.core.SqlParameter;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.jdbc.core.simple.SimpleJdbcCall;
+import org.springframework.stereotype.Repository;
+
+import com.example.demo.dao.CategoriaDao;
+import com.example.demo.entity.Categoria;
+
+import oracle.jdbc.OracleTypes;
+@Repository
+public class CategoriaDaoImp implements CategoriaDao{
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
+	private SimpleJdbcCall simpleJdbcCall;
+
+	
+	@Override
+	public Map<String,Object> lista() {
+		simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("sp_listar_categoria")
+		.declareParameters(new SqlOutParameter("cat",OracleTypes.CURSOR,new ColumnMapRowMapper()));
+		return simpleJdbcCall.execute();
+	}
+
+	@Override
+	public int create(Categoria categoria) {
+		// TODO Auto-generated method stub
+		return jdbcTemplate.update("call SP_CREAR_CATEGORIA(?)",categoria.getNombre());
+	}
+
+	@Override
+	public int edit(Categoria categoria) {
+		// TODO Auto-generated method stub
+		return jdbcTemplate.update("call SP_EDITAR_CATEGORIA(?,?)",categoria.getIdcategoria(),categoria.getNombre());
+	}
+
+	@Override
+	public int delete(int id) {
+		// TODO Auto-generated method stub
+		return jdbcTemplate.update("call SP_ELIMINAR_CATEGORIA(?)",id);
+	}
+
+	@Override
+	public Map<String,Object> read(int id) {
+		simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+				.withProcedureName("SP_READ_CATEGORIA")
+				.declareParameters(new SqlOutParameter("cat",OracleTypes
+				.CURSOR,new ColumnMapRowMapper()), new SqlParameter("idc", Types.INTEGER));
+		SqlParameterSource in = new MapSqlParameterSource().addValue("idc", id);
+		return simpleJdbcCall.execute(in);
+	}
+
+}
